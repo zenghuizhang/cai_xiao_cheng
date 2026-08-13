@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 圆角背景 -->
+    <path android:pathData="M24,4 L84,4 Q104,4 104,24 L104,84 Q104,104 84,104 L24,104 Q4,104 4,84 L4,24 Q4,4 24,4 Z">
+        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/aapt">
+            <gradient
+                android:startX="54" android:startY="4"
+                android:endX="54" android:endY="104"
+                android:type="linear">
+                <item android:offset="0" android:color="#FF34B889"/>
+                <item android:offset="1" android:color="#FF1F7A56"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 硬币 -->
+    <path
+        android:pathData="M54,60 m-17,0 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0 Z"
+        android:fillColor="#F7C967"
+        android:strokeColor="#E0A537"
+        android:strokeWidth="2"/>
+    <path
+        android:pathData="M48,56 L54,63 L60,56 M54,63 L54,68 M50,65 L58,65 M50,68 L58,68"
+        android:strokeColor="#8A5A18"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+
+    <!-- 嫩芽 -->
+    <path
+        android:pathData="M54,43 C53,39 55,36 54,32"
+        android:strokeColor="#2E7D54"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M54,37 C48,35 44,31 45,27 C50,27 53,32 54,37 Z"
+        android:fillColor="#C7F0A0"
+        android:strokeColor="#9FD978"
+        android:strokeWidth="1"/>
+    <path
+        android:pathData="M54,35 C60,33 64,29 63,25 C58,25 55,30 54,35 Z"
+        android:fillColor="#D8F6B2"
+        android:strokeColor="#9FD978"
+        android:strokeWidth="1"/>
+</vector>
