@@ -1,0 +1,64 @@
+{
+  "name": "财小橙",
+  "appid": "",
+  "description": "投资认知启蒙 · 纯教育、零交易",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {},
+    "distribute": {
+      "android": { "permissions": [] },
+      "ios": {},
+      "sdkConfigs": {}
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true,
+      "postcss": true
+    },
+    "usingComponents": true,
+    "permission": {},
+    "requiredBackgroundModes": [],
+    "requiredPrivateInfos": [],
+    "uniCloud": {
+      "provider": "aliyun",
+      "spaceId": "",
+      "clientSecret": "",
+      "endpoint": ""
+    }
+  },
+  "h5": {
+    "title": "财小橙 · 投资认知启蒙",
+    "router": { "mode": "hash", "base": "./" },
+    "devServer": {
+      "port": 8080,
+      "https": false
+    },
+    "publicPath": "./",
+    "uniCloud": {
+      "provider": "aliyun",
+      "spaceId": "",
+      "clientSecret": "",
+      "endpoint": ""
+    }
+  },
+  "vueVersion": "3",
+  "uniCloud": {
+    "provider": "aliyun"
+  }
+}

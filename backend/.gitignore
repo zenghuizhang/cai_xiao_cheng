@@ -1,0 +1,13 @@
+# uniCloud 后端忽略规则
+# 云函数本地依赖（公共模块在部署时由 HBuilderX 拉取/上传）
+cloudfunctions/*/node_modules/
+cloudfunctions/**/node_modules/
+
+# uni-id 真实配置含密钥，仅提交 example 模板
+cloudfunctions/common/uni-config-center/uni-id/config.json
+
+# 系统文件
+.DS_Store
+*.log
+.idea/
+.vscode/

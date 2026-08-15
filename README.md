@@ -1,98 +1,84 @@
-# 财小橙 · 投资认知启蒙 App（Flutter）
+# 财小橙 · 投资认知启蒙（多端 monorepo）
 
 > 从零开始，慢慢变富。
-> 一款为投资小白打造的**纯教育、纯离线**投资认知启蒙应用。
+> 一款为投资小白打造的**纯教育、零交易**投资认知启蒙应用——不荐股、不交易、不开户、不预测收益。
 
-财小橙不荐股、不交易、不开户、不收集任何数据——它只想在你投入第一分钱之前，
-帮你建立能「保命」的投资常识。
+本仓库按**客户端形态**归类为独立目录，共享同一套产品内容与设计语言，各自独立开发与构建。
 
 ---
-
-## ✨ 功能一览
-
-- **🌱 学习路径**：7 章 34 节体系化课程，每节 3 分钟左右
-  1. 理财先理脑（通胀、复利、钱的三个账户）
-  2. 认清风险（风险/波动、能力圈）
-  3. 常见工具（储蓄、债券、基金、股票、房产黄金保险、加密货币）
-  4. 指数基金与定投（指数、定投微笑曲线）
-  5. 资产配置（分散、股债、再平衡、四笔钱）
-  6. 避开镰刀（保本高息骗局、杀猪盘、P2P、认知偏差）
-  7. 开始行动（应急金、清坏债、开户、小步开始）
-- **📝 小节测验**：每节 2–3 题，即时反馈，全对才能通过并解锁下一节
-- **🧰 工具箱**：复利计算器、定投计算器、通胀缩水计算器、8 题风险承受力测评、40+ 术语词典
-- **👤 我的**：学习统计、6 枚成就徽章、每日一签
-- **🛡️ 隐私**：无网络权限、无账号、飞行模式完全可用
-  所有数据仅保存在本地，应用卸载即清除
-- 首次启动 3 屏引导，全程暖色成长绿设计，小橙吉祥物陪伴
-
-## 🔒 权限与隐私
-
-本应用完全离线运行，不请求任何网络权限，不收集任何个人数据。
-学习进度、成就数据仅存储在设备本地，应用卸载即完全清除。
-
-## 🏗 技术架构
-
-- **框架**：Flutter + Dart
-- **状态管理**：Provider
-- **本地存储**：Sqlite
-- **架构**：分层架构，功能模块化
-- **支持多CPU架构**：armeabi-v7a、arm64-v8a、x86_64
-
-## 🔨 构建
-
-需要 Flutter SDK 环境。
-
-```bash
-cd caixiaocheng
-flutter pub get
-flutter build apk --release
-```
-
-产物路径：
-
-```
-caixiaocheng/build/app/outputs/flutter-apk/app-release.apk
-```
-
-### 安装到手机
-
-```bash
-flutter install
-```
-
-也可直接把 APK 传到 Android 手机，允许「安装未知来源应用」后点击安装。
 
 ## 📁 目录结构
 
 ```
-touzirenzhi/
-├── docs/                     # 设计文档
-│   ├── 01-设计prompt.md      # 设计 Prompt + 设计系统
-│   ├── 02-产品定位.md
-│   ├── 03-产品PRD.md
-│   └── 04-项目拆解.md
-├── caixiaocheng/             # Flutter 2.0 工程
-│   ├── lib/                  # 源代码
-│   │   ├── core/             # 工具、主题、数据库
-│   │   ├── data/             # 数据模型
-│   │   ├── features/         # 各功能模块
-│   │   ├── providers/        # 状态管理
-│   │   └── widgets/          # 通用组件
-│   ├── assets/               # 静态资源
-│   ├── android/              # Android 配置
-│   └── pubspec.yaml          # 依赖配置
-└── README.md
+cai_xiao_cheng/
+├── flutter/        # Flutter 版（Android/iOS 原生 App，旗舰作品）
+├── miniprogram/    # 小程序版（uni-app，一套代码出微信小程序 + H5）
+├── harmonyos/      # 鸿蒙版（规划中，ArkTS / HarmonyOS NEXT）
+├── backend/        # 后台（uniCloud 云函数 + 数据库，用户系统，各端共用）
+├── docs/           # 共享产品文档（定位 / PRD / 项目拆解 / 内容框架）
+└── README.md       # 本文件
 ```
 
-## ⚠️ 免责声明
+| 目录 | 形态 | 技术栈 | 状态 |
+|------|------|--------|------|
+| `flutter/` | Android / iOS App | Flutter + Dart + Provider + SQLite | ✅ v2.0 可构建（`flutter build apk`） |
+| `miniprogram/` | 微信小程序 + H5 | uni-app Vue3 + Vite + Pinia | ✅ v1.0 双端构建通过 |
+| `harmonyos/` | 鸿蒙 HarmonyOS NEXT | ArkTS（规划） | 🚧 规划中，见其 README |
+| `backend/` | uniCloud 服务端 | uniCloud（阿里云）+ uni-id | ✅ 云函数就绪，待部署 |
 
-本应用所有内容（课程、测验、计算器、风险测评、术语解释）**仅用于金融知识
-普及与教育目的**，不构成任何投资建议、要约或承诺。文中收益率、比例等均为
-教学示例，不代表对未来的预测。投资有风险，决策需谨慎；必要时请咨询持牌
-专业机构。
+> 各端共享 `docs/` 下的产品文档与内容框架；后端 `backend/` 为所有客户端共用。
 
-## 📄 版本
+---
 
-v2.0 (Flutter) - 2026-08
+## 🍊 各端快速入口
 
-v1.0 为原生 Java + WebView 版本，已归档移除
+### Flutter 版（`flutter/`）
+```bash
+cd flutter
+flutter pub get
+flutter build apk --release   # 产物 build/app/outputs/flutter-apk/app-release.apk
+```
+详见 [`flutter/README.md`](./flutter/README.md)。
+
+### 小程序 / H5 版（`miniprogram/`）
+```bash
+cd miniprogram
+npm install
+npm run build:mp-weixin   # 产物 dist/build/mp-weixin，用微信开发者工具导入
+npm run build:h5          # 产物 dist/build/h5
+```
+详见 [`miniprogram/README.md`](./miniprogram/README.md)。
+
+### 后台（`backend/`）
+uniCloud 云函数 + 数据库，承载用户系统（微信/手机号登录 + 进度云同步 + uni-admin 管理）。
+部署步骤见 [`backend/README.md`](./backend/README.md)。
+
+### 鸿蒙版（`harmonyos/`）
+规划中，技术路线与启动步骤见 [`harmonyos/README.md`](./harmonyos/README.md)。
+
+---
+
+## 🧭 产品定位
+
+- **纯教育、零交易**：类目「教育-在线教育」，绝不做金融类目；不荐股/不预测/不承诺收益/无买卖/无群码入口。
+- **投资认知地基**：用大白话和生活类比，帮小白在投入第一分钱前建立能「保命」的常识——通胀、复利、风险、工具、骗局、情绪。
+- **醒目免责**：所有收益率/历史场景/虚拟资产均为假设性教学案例，不构成投资建议。
+- 隐私优先：默认本地存储，登录仅用于跨设备进度同步。
+
+详见 [`docs/02-产品定位.md`](./docs/02-产品定位.md) 与 [`docs/03-产品PRD.md`](./docs/03-产品PRD.md)。
+
+---
+
+## 📚 共享文档
+
+- [`docs/01-设计prompt.md`](./docs/01-设计prompt.md) — 设计语言
+- [`docs/02-产品定位.md`](./docs/02-产品定位.md) — 定位与商业化决策
+- [`docs/03-产品PRD.md`](./docs/03-产品PRD.md) — 产品需求文档
+- [`docs/04-项目拆解.md`](./docs/04-项目拆解.md) — 项目拆解
+- [`docs/词条与卡片扩充框架.md`](./docs/词条与卡片扩充框架.md) — 内容框架
+
+---
+
+## 📝 版本
+
+- **v1.0**（2026-08-15）：monorepo 归类，flutter / miniprogram / backend 三端就绪，harmonyos 规划中。

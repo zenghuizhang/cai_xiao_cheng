@@ -1,0 +1,15 @@
+{
+  "name": "user-center",
+  "version": "1.0.0",
+  "description": "财小橙用户中心：微信/手机号登录 + 学习进度云端同步",
+  "main": "index.js",
+  "dependencies": {
+    "uni-id-common": "file:../common/uni-id-common",
+    "uni-config-center": "file:../common/uni-config-center"
+  },
+  "extension": {
+    "uniCloud": {
+      "scope": "unicloud"
+    }
+  }
+}

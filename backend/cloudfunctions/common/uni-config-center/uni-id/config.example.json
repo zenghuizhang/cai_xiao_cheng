@@ -1,0 +1,39 @@
+{
+  "passwordSecret": [{ "version": 1, "value": "caixiaocheng_replace_with_random_32_char_secret" }],
+  "tokenSecret": [{ "version": 1, "value": "caixiaocheng_replace_with_random_32_char_secret" }],
+  "tokenExpiresIn": 2592000,
+  "tokenExpiresThreshold": 86400,
+  "passwordErrorLimit": 6,
+  "passwordErrorRetryTime": 3600,
+  "autoSetNickname": true,
+  "registerNeedPassword": false,
+
+  "mp-weixin": {
+    "tokenExpiresIn": 2592000,
+    "oauth": {
+      "weixin": {
+        "appid": "请填入微信小程序 AppID",
+        "appsecret": "请填入微信小程序 AppSecret"
+      }
+    }
+  },
+
+  "mp": {
+    "tokenExpiresIn": 2592000
+  },
+
+  "h5": {
+    "tokenExpiresIn": 2592000
+  },
+
+  "service": {
+    "sms": {
+      "name": "财小橙",
+      "codeExpiresIn": 300,
+      "smsKey": "请填入 uni-ic 短信 smsKey",
+      "smsSecret": "请填入 uni-ic 短信 smsSecret"
+    }
+  },
+
+  "fx-mp": {}
+}

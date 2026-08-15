@@ -1,0 +1,44 @@
+{
+  "bsonType": "object",
+  "required": ["uid", "progress", "updated_at"],
+  "permission": {
+    "read": "doc.uid == auth.uid",
+    "create": "doc.uid == auth.uid",
+    "update": "doc.uid == auth.uid",
+    "delete": false,
+    "count": "doc.uid == auth.uid"
+  },
+  "properties": {
+    "_id": { "description": "ID" },
+    "uid": {
+      "bsonType": "string",
+      "description": "用户ID（uni-id-users._id）",
+      "foreignKey": "uni-id-users._id"
+    },
+    "progress": {
+      "bsonType": "object",
+      "description": "学习进度（前端 getProgress 返回结构）",
+      "properties": {
+        "onboarding_done": { "bsonType": "bool" },
+        "total_points": { "bsonType": "int" },
+        "current_level": { "bsonType": "int" },
+        "rank_title": { "bsonType": "string" },
+        "cards_read": { "bsonType": "array", "items": { "bsonType": "string" } },
+        "passed_chapters": { "bsonType": "array", "items": { "bsonType": "string" } },
+        "review_queue": { "bsonType": "array", "items": { "bsonType": "string" } },
+        "mastered_cards": { "bsonType": "array", "items": { "bsonType": "string" } },
+        "unlocked_fruits": { "bsonType": "array", "items": { "bsonType": "string" } },
+        "crash_used": { "bsonType": "bool" },
+        "risk_profile": { "bsonType": "string" },
+        "daily_streak": { "bsonType": "int" },
+        "last_daily_date": { "bsonType": "string" },
+        "quiz_records": { "bsonType": "object" },
+        "sim_records": { "bsonType": "object" },
+        "daily_records": { "bsonType": "object" },
+        "updated_at": { "bsonType": "int" }
+      }
+    },
+    "updated_at": { "bsonType": "int", "description": "最后更新时间戳（毫秒）" }
+  },
+  "version": 1
+}

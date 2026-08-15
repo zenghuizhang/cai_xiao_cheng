@@ -1,0 +1,58 @@
+/* 财小橙设计 token —— 移植自 Flutter app_theme.dart */
+/* 暖橙 #FF8C42 + 奶白 #FFF8F0，营造温暖、安全、放松的阅读氛围 */
+
+/* 主色 */
+$primary: #ff8c42;
+$primaryDark: #e5732a;
+$primarySoft: #fff0e6;
+
+/* 背景 / 卡片 */
+$cream: #fff8f0;
+$card: #ffffff;
+
+/* 文字 */
+$ink: #3d2b1f;
+$ink2: #8a7a6d;
+$ink3: #b8a99a;
+
+/* 线条 */
+$line: #f0e6d8;
+
+/* 状态色（克制使用） */
+$success: #6fb47a;
+$successSoft: #e6f4e9;
+$danger: #e86a5c;
+$dangerSoft: #ffe9e4;
+$warnSoft: #ffe9dc;
+
+/* 段位配色 */
+$level1: #cd7f32; // 青铜
+$level2: #9aa7b0; // 白银
+$level3: #e5a83b; // 黄金
+$level4: #7b6bd6; // 铂金
+
+/* 圆角 */
+$radius-sm: 12rpx;
+$radius-md: 20rpx;
+$radius-lg: 32rpx;
+$radius-pill: 999rpx;
+
+/* 字号（rpx，750 设计稿基准；H5 下 1rpx≈0.5px） */
+$fs-xs: 22rpx;
+$fs-sm: 26rpx;
+$fs-base: 30rpx; // 正文
+$fs-md: 32rpx;
+$fs-lg: 36rpx;
+$fs-xl: 44rpx;
+$fs-xxl: 56rpx;
+
+/* 行高 */
+$lh-base: 1.8;
+
+/* 阴影 */
+$shadow-card: 0 4rpx 24rpx rgba(61, 43, 31, 0.06);
+
+/* uni-app 内置变量覆盖 */
+$uni-color-primary: $primary;
+$uni-text-color: $ink;
+$uni-bg-color: $cream;

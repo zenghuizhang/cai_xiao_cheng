@@ -1,0 +1,107 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {}
+  },
+  "pages": [
+    {
+      "path": "pages/home/home",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/learn/learn",
+      "style": { "navigationBarTitleText": "学习" }
+    },
+    {
+      "path": "pages/simulation/simulation",
+      "style": { "navigationBarTitleText": "模拟" }
+    },
+    {
+      "path": "pages/mine/mine",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/onboarding/onboarding",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/learn/chapter",
+      "style": { "navigationBarTitleText": "章节" }
+    },
+    {
+      "path": "pages/learn/swipe",
+      "style": { "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/learn/quiz",
+      "style": { "navigationBarTitleText": "闯关测验" }
+    },
+    {
+      "path": "pages/learn/review",
+      "style": { "navigationBarTitleText": "复习队列" }
+    },
+    {
+      "path": "pages/simulation/compound",
+      "style": { "navigationBarTitleText": "复利计算器" }
+    },
+    {
+      "path": "pages/simulation/dca",
+      "style": { "navigationBarTitleText": "定投计算器" }
+    },
+    {
+      "path": "pages/simulation/inflation",
+      "style": { "navigationBarTitleText": "通胀缩水器" }
+    },
+    {
+      "path": "pages/simulation/sim-life",
+      "style": { "navigationBarTitleText": "模拟人生" }
+    },
+    {
+      "path": "pages/risk/risk-quiz",
+      "style": { "navigationBarTitleText": "风险承受力测评" }
+    },
+    {
+      "path": "pages/daily/daily",
+      "style": { "navigationBarTitleText": "每日3分钟" }
+    },
+    {
+      "path": "pages/books/bookshelf",
+      "style": { "navigationBarTitleText": "经典书架" }
+    },
+    {
+      "path": "pages/books/book-detail",
+      "style": { "navigationBarTitleText": "书籍导读" }
+    },
+    {
+      "path": "pages/mine/crash",
+      "style": { "navigationBarTitleText": "暴跌演练" }
+    },
+    {
+      "path": "pages/mine/about",
+      "style": { "navigationBarTitleText": "关于与免责" }
+    },
+    {
+      "path": "pages/login/login",
+      "style": { "navigationStyle": "custom" }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "财小橙",
+    "navigationBarBackgroundColor": "#FFF8F0",
+    "backgroundColor": "#FFF8F0",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8A7A6D",
+    "selectedColor": "#FF8C42",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/home", "text": "首页" },
+      { "pagePath": "pages/learn/learn", "text": "学习" },
+      { "pagePath": "pages/simulation/simulation", "text": "模拟" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+# 财小橙 monorepo 顶层忽略规则
+# 各子工程（flutter / miniprogram / backend）均有自己的 .gitignore，此处仅做通用兜底。
+
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.iml
+
+# 各子工程的产物目录（已被各自 .gitignore 覆盖，此处再兜一层）
+**/node_modules/
+**/build/
+**/dist/
+**/unpackage/
