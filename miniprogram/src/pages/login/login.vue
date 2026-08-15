@@ -42,21 +42,43 @@
           placeholder="请输入手机号"
         />
       </view>
+      <!-- 图形验证码（uni-id sendSmsCode / loginBySms 要求） -->
+      <view class="fm-row">
+        <input
+          v-model="captchaInput"
+          class="fm-input"
+          type="text"
+          maxlength="6"
+          placeholder="图形验证码"
+        />
+        <image
+          v-if="captchaImg"
+          class="fm-captcha"
+          :src="captchaImg"
+          mode="aspectFit"
+          @tap="refreshCaptcha"
+        />
+        <view v-else class="fm-captcha fm-captcha-loading" @tap="refreshCaptcha">加载</view>
+      </view>
       <view class="fm-row">
         <input
           v-model="smsCode"
           class="fm-input"
           type="number"
           maxlength="6"
-          placeholder="验证码"
+          placeholder="短信验证码"
         />
-        <view class="fm-code" :class="{ disabled: counting || !phoneOk }" @tap="onSendCode">
+        <view
+          class="fm-code"
+          :class="{ disabled: counting || !phoneOk || !captchaInput }"
+          @tap="onSendCode"
+        >
           {{ counting ? `${countdown}s` : '获取验证码' }}
         </view>
       </view>
       <view
         class="cx-btn-primary lg-btn"
-        :class="{ disabled: !agreed || !phoneOk || !smsCode || user.loginLoading }"
+        :class="{ disabled: !agreed || !phoneOk || !smsCode || !captchaInput || user.loginLoading }"
         @tap="onSmsLogin"
       >
         <text>{{ user.loginLoading ? '登录中…' : '登录' }}</text>
@@ -80,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PageHeader from '@/components/PageHeader.vue'
 import OrangeMascot from '@/components/OrangeMascot.vue'
 import { useUserStore } from '@/store/user'
@@ -89,10 +111,27 @@ const user = useUserStore()
 const agreed = ref(false)
 const phone = ref('')
 const smsCode = ref('')
+const captchaInput = ref('')
+const captchaImg = ref('')
 const counting = ref(false)
 const countdown = ref(60)
 
 const phoneOk = computed(() => /^1\d{10}$/.test(phone.value))
+
+/** 拉取图形验证码（uni-id sendSmsCode / loginBySms 要求）。 */
+async function refreshCaptcha() {
+  try {
+    const r = await user.getCaptcha()
+    // uni-id-co.createCaptcha 返回 { captchaBase64, captchaId } 或类似结构
+    captchaImg.value = (r && (r.captchaBase64 || r.captcha || r.image)) || ''
+  } catch (e) {
+    captchaImg.value = ''
+  }
+}
+
+onMounted(() => {
+  refreshCaptcha()
+})
 
 let timer = null
 function startCountdown() {
@@ -150,25 +189,28 @@ async function onGetPhoneNumber(e) {
 
 // #ifndef MP-WEIXIN
 async function onSendCode() {
-  if (counting.value || !phoneOk.value) {
+  if (counting.value || !phoneOk.value || !captchaInput.value) {
     if (!phoneOk.value) uni.showToast({ title: '请输入正确手机号', icon: 'none' })
+    else if (!captchaInput.value) uni.showToast({ title: '请输入图形验证码', icon: 'none' })
     return
   }
   try {
-    await user.sendSmsCode(phone.value)
+    await user.sendSmsCode(phone.value, captchaInput.value)
     uni.showToast({ title: '验证码已发送', icon: 'none' })
     startCountdown()
   } catch (e) {
     uni.showToast({ title: e.message || '发送失败', icon: 'none' })
+    refreshCaptcha() // 失败后刷新图形验证码
   }
 }
 async function onSmsLogin() {
-  if (!ensureAgreed() || !phoneOk.value || !smsCode.value || user.loginLoading) return
+  if (!ensureAgreed() || !phoneOk.value || !smsCode.value || !captchaInput.value || user.loginLoading) return
   try {
-    await user.loginBySmsCode(phone.value, smsCode.value)
+    await user.loginBySmsCode(phone.value, smsCode.value, captchaInput.value)
     successBack()
   } catch (e) {
     uni.showToast({ title: e.message || '登录失败', icon: 'none' })
+    refreshCaptcha()
   }
 }
 // #endif
@@ -276,6 +318,22 @@ async function onSmsLogin() {
 }
 .fm-code.disabled {
   color: $ink3;
+}
+.fm-captcha {
+  width: 160rpx;
+  height: 64rpx;
+  border-radius: $radius-sm;
+  border: 1rpx solid $line;
+  background: $card;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+.fm-captcha-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $fs-xs;
+  color: $ink2;
 }
 .lg-form .lg-btn {
   margin-top: 32rpx;

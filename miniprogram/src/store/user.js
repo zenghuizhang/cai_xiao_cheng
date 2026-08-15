@@ -1,16 +1,18 @@
 /**
  * 用户系统 Store —— 登录态 + 云端进度同步。
  *
- * 设计：本地优先。未登录时 App 完全可用（游客模式）；登录后跨设备同步。
+ * 架构分工：
+ *   - 登录/登出/短信验证码 → 官方 uni-id-co 云对象（uniCloud.importObject('uni-id-co')）
+ *   - 学习进度存取 → 自建 user-center 云函数（uniCloud.callFunction）
+ *
  * 登录方式：
- *   - 微信小程序：openid 登录（uni.login→code→云函数 loginByWeixin）
- *   - 微信小程序：手机号一键登录（button open-type=getPhoneNumber→code→云函数）
- *   - H5 / 通用：短信验证码登录（sendSmsCode + loginBySmsCode）
+ *   - 微信小程序：openid 登录（uni.login→code→uniIdCo.loginByWeixin）
+ *   - 微信小程序：手机号一键登录（getPhoneNumber→phoneCode→uniIdCo.loginByWeixinMobile）
+ *   - H5 / 通用：短信验证码登录（uniIdCo.sendSmsCode + uniIdCo.loginBySms，需图形验证码 captcha）
  *
  * 同步策略：本地写即存 → debounce 3s 上云；登录/启动 → 拉取云端 → 合并（数值取大、列表取并集）。
  *
- * 注：manifest.json 的 uniCloud spaceId 为空时，云函数不可用，
- *     所有云调用会走 catch 分支并给出友好提示，App 仍以本地模式运行。
+ * 注：manifest.json 的 uniCloud spaceId 为空时，云调用不可用，App 以本地游客模式运行。
  */
 import { defineStore } from 'pinia'
 import { KEYS, get, set, remove, getProgress } from '@/utils/storage'
@@ -75,7 +77,7 @@ export const useUserStore = defineStore('user', {
     token: '',
     loginLoading: false,
     syncing: false,
-    cloudAvailable: true, // 云端是否可用（首次调用失败后置 false，避免反复试）
+    cloudAvailable: true,
   }),
 
   getters: {
@@ -93,10 +95,8 @@ export const useUserStore = defineStore('user', {
         this.token = token
         this.userInfo = userInfo
         this.isLoggedIn = true
-        // 拉取云端进度合并（异步，不阻塞）
         this.pullProgress().catch(() => {})
       }
-      // 监听 app store 进度变更 → debounce 上云
       uni.$on('progress-changed', () => {
         if (!this.isLoggedIn) return
         if (syncTimer) clearTimeout(syncTimer)
@@ -106,8 +106,13 @@ export const useUserStore = defineStore('user', {
       })
     },
 
-    /** 调用云函数 user-center 的统一封装。 */
-    async _call(action, params = {}) {
+    /** 获取 uni-id-co 云对象实例。 */
+    _uniIdCo() {
+      return uniCloud.importObject('uni-id-co')
+    },
+
+    /** 调用 user-center 云函数（仅用于进度同步）。 */
+    async _callUserCenter(action, params = {}) {
       const res = await uniCloud.callFunction({
         name: 'user-center',
         data: { action, params },
@@ -127,8 +132,9 @@ export const useUserStore = defineStore('user', {
         const loginRes = await uni.login({ provider: 'weixin' })
         const code = loginRes.code
         if (!code) throw new Error('未获取到微信登录凭证')
-        const r = await this._call('loginByWeixin', { code })
+        const r = await this._uniIdCo().loginByWeixin({ code })
         this._applyLoginResult(r)
+        await this._fetchAccountInfo()
         await this.pullProgress()
         return true
       } finally {
@@ -140,8 +146,9 @@ export const useUserStore = defineStore('user', {
     async loginByPhone(phoneCode) {
       this.loginLoading = true
       try {
-        const r = await this._call('loginByPhone', { phoneCode })
+        const r = await this._uniIdCo().loginByWeixinMobile({ phoneCode })
         this._applyLoginResult(r)
+        await this._fetchAccountInfo()
         await this.pullProgress()
         return true
       } finally {
@@ -149,18 +156,24 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    /** 通用/H5：发送短信验证码。 */
-    async sendSmsCode(phone) {
-      await this._call('sendSmsCode', { phone })
+    /** 获取图形验证码（短信登录前置）。返回 { captchaBase64 }。 */
+    async getCaptcha() {
+      return await this._uniIdCo().createCaptcha({ scene: 'login-by-sms' })
+    },
+
+    /** 通用/H5：发送短信验证码（需图形验证码 captcha）。 */
+    async sendSmsCode(phone, captcha) {
+      await this._uniIdCo().sendSmsCode({ mobile: phone, captcha, scene: 'login-by-sms' })
       return true
     },
 
     /** 通用/H5：短信验证码登录。 */
-    async loginBySmsCode(phone, code) {
+    async loginBySmsCode(phone, code, captcha) {
       this.loginLoading = true
       try {
-        const r = await this._call('loginBySmsCode', { phone, code })
+        const r = await this._uniIdCo().loginBySms({ mobile: phone, code, captcha })
         this._applyLoginResult(r)
+        await this._fetchAccountInfo()
         await this.pullProgress()
         return true
       } finally {
@@ -168,14 +181,15 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    /** 写入登录态到 store + 本地。 */
+    /** 写入登录态到 store + 本地。uni-id-co 返回 newToken:{ token, tokenExpired }。 */
     _applyLoginResult(r) {
-      this.token = r.token || ''
+      const token = (r.newToken && r.newToken.token) || r.token || ''
+      this.token = token
       this.userInfo = {
         uid: r.uid || '',
-        nickname: r.nickname || r.userInfo?.nickname || '同学',
-        avatar: r.avatar || r.userInfo?.avatar || '',
-        username: r.username || r.userInfo?.username || '',
+        nickname: (r.userInfo && r.userInfo.nickname) || r.nickname || '同学',
+        avatar: (r.userInfo && r.userInfo.avatar) || r.avatar || '',
+        username: (r.userInfo && r.userInfo.username) || r.username || '',
       }
       this.isLoggedIn = true
       this.cloudAvailable = true
@@ -183,10 +197,29 @@ export const useUserStore = defineStore('user', {
       set(KEYS.USERINFO, this.userInfo)
     },
 
-    /** 登出（保留本地进度，清云端登录态）。 */
+    /** 登录后拉取用户资料（昵称/头像）。 */
+    async _fetchAccountInfo() {
+      try {
+        const r = await this._uniIdCo().getAccountInfo()
+        if (r && !r.errCode) {
+          const info = r.userInfo || r
+          this.userInfo = {
+            uid: this.userInfo.uid || info._id || info.uid || '',
+            nickname: info.nickname || info.username || this.userInfo.nickname,
+            avatar: info.avatar || this.userInfo.avatar,
+            username: info.username || this.userInfo.username,
+          }
+          set(KEYS.USERINFO, this.userInfo)
+        }
+      } catch (e) {
+        /* 忽略，登录结果里已有基础信息 */
+      }
+    },
+
+    /** 登出。 */
     async logout() {
       try {
-        if (this.isLoggedIn) await this._call('logout', {})
+        if (this.isLoggedIn) await this._uniIdCo().logout()
       } catch (e) {
         /* ignore */
       }
@@ -200,11 +233,10 @@ export const useUserStore = defineStore('user', {
     /** 上传本地进度到云端。 */
     async syncProgress() {
       if (!this.isLoggedIn) return
-      const app = useAppStore()
       const local = getProgress()
       this.syncing = true
       try {
-        await this._call('saveProgress', { progress: local })
+        await this._callUserCenter('saveProgress', { progress: local })
       } catch (e) {
         this._markCloudUnavailable(e)
       } finally {
@@ -219,12 +251,11 @@ export const useUserStore = defineStore('user', {
       const local = getProgress()
       this.syncing = true
       try {
-        const r = await this._call('getProgress', {})
+        const r = await this._callUserCenter('getProgress', {})
         const cloud = r.progress || null
         const merged = mergeProgress(local, cloud)
         app.applyMergedProgress(merged)
-        // 合并后回写本地 + 上云一次（保证云端也有并集）
-        await this._call('saveProgress', { progress: merged }).catch(() => {})
+        await this._callUserCenter('saveProgress', { progress: merged }).catch(() => {})
       } catch (e) {
         this._markCloudUnavailable(e)
       } finally {
@@ -232,7 +263,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    /** 云端不可用时静默降级，避免每次操作都报错。 */
+    /** 云端不可用时静默降级。 */
     _markCloudUnavailable(e) {
       const msg = (e && e.message) || ''
       if (/spaceId|空间|未关联|FUNCTIONS_NOT_FOUND|not found|无响应/i.test(msg)) {

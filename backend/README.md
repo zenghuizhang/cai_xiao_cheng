@@ -4,14 +4,27 @@
 
 > 纯教育定位：本后端仅同步**学习进度**，不处理任何交易、资金、金融数据。
 >
-> 本目录与前端解耦：云函数源码独立部署到服务空间，前端（`../miniprogram`）只通过 `manifest.json` 里的 `spaceId` 调用云函数，构建时不依赖本目录。
+> 本目录与前端解耦：云函数/云对象源码独立部署到服务空间，前端（`../miniprogram`）只通过 `manifest.json` 里的 `spaceId` 调用，构建时不依赖本目录。
+
+## 架构分工
+
+| 组件 | 类型 | 职责 |
+|------|------|------|
+| **uni-id-co** | 云对象（官方） | 登录/登出/短信验证码/账号管理（`loginByWeixin`、`loginByWeixinMobile`、`sendSmsCode`、`loginBySms`、`logout`、`getAccountInfo`） |
+| **user-center** | 云函数（自建） | 学习进度存取（`saveProgress`、`getProgress`），内部用 `uni-id-common.checkToken` 鉴权 |
+| **uni-id-common** | 公共模块 | token 校验/生成（`checkToken`、`createToken`） |
+| **uni-config-center** | 公共模块 | uni-id 配置读取（`uni-id/config.json`） |
+
+前端调用方式：
+- 登录相关 → `uniCloud.importObject('uni-id-co')` 调用云对象
+- 进度同步 → `uniCloud.callFunction({ name: 'user-center' })`
 
 ## 目录结构
 
 ```
 backend/                             ← 本目录（独立的后端工程）
 ├── cloudfunctions/
-│   ├── user-center/              ← 用户中心云函数（登录 + 进度同步）
+│   ├── user-center/              ← 自建云函数：学习进度存取
 │   │   ├── index.js
 │   │   └── package.json
 │   └── common/                   ← 公共模块（需自行下载，见下文）
@@ -21,6 +34,8 @@ backend/                             ← 本目录（独立的后端工程）
 ├── database/
 │   └── cxch-user-progress.schema.json  ← 学习进度表结构 + 权限
 └── README.md                        ← 本文件
+
+# uni-id-co 云对象需通过 HBuilderX 从插件市场导入（见第三节）
 ```
 
 ---
@@ -49,18 +64,27 @@ backend/                             ← 本目录（独立的后端工程）
 
 ---
 
-## 三、安装公共模块
+## 三、安装公共模块与云对象
 
-`user-center` 依赖两个公共模块。用 **HBuilderX** 打开本 `backend/` 目录（或仅打开 `cloudfunctions` 目录）：
+需要安装 **2 个公共模块** + **1 个云对象**。用 **HBuilderX** 打开本 `backend/` 目录：
+
+### 3.1 公共模块（uni-id-common、uni-config-center）
 
 1. 右键 `cloudfunctions` → **管理公共模块依赖** → 勾选 `uni-id-common`、`uni-config-center`。
-2. 或到 [DCloud 插件市场](https://ext.dcloud.net.cn/) 搜索这两个插件，下载到 `cloudfunctions/common/` 下。
+2. 或到 [DCloud 插件市场](https://ext.dcloud.net.cn/) 搜索下载到 `cloudfunctions/common/` 下。
 
-安装后目录应为：
+安装后：
 ```
-cloudfunctions/common/uni-id-common/        (含 index.js 等)
+cloudfunctions/common/uni-id-common/        (含 index.js)
 cloudfunctions/common/uni-config-center/    (含 index.js + uni-id/ 目录)
 ```
+
+### 3.2 云对象 uni-id-co（登录/登出/短信）
+
+1. 右键 `cloudfunctions` → **新建云对象** → 选择从插件市场导入 `uni-id-co`。
+2. 或插件市场搜索 `uni-id-co` 下载到 `cloudfunctions/uni-id-co/`。
+
+`uni-id-co` 是官方封装好的账号云对象，提供 `loginByWeixin`、`loginByWeixinMobile`、`sendSmsCode`、`loginBySms`、`logout`、`getAccountInfo` 等方法，前端直接 `uniCloud.importObject('uni-id-co')` 调用。
 
 ---
 
@@ -76,11 +100,12 @@ cloudfunctions/common/uni-config-center/    (含 index.js + uni-id/ 目录)
 
 ---
 
-## 五、部署云函数与数据库
+## 五、部署云函数、云对象与数据库
 
-1. 右键 `cloudfunctions/user-center` → **上传部署**。
-2. 右键 `database/cxch-user-progress.schema.json` → **上传 DB Schema**。
-3. `uni-id-users` 表的 schema 会随 `uni-id-common` / uni-admin 自动带出，无需手写。
+1. 右键 `cloudfunctions/uni-id-co` → **上传部署**（云对象）。
+2. 右键 `cloudfunctions/user-center` → **上传部署**（云函数）。
+3. 右键 `database/cxch-user-progress.schema.json` → **上传 DB Schema**。
+4. `uni-id-users` 表的 schema 会随 `uni-id-co` 自动带出，无需手写。
 
 ---
 
@@ -101,7 +126,7 @@ cloudfunctions/common/uni-config-center/    (含 index.js + uni-id/ 目录)
 
 1. [插件市场下载 uni-admin](https://ext.dcloud.net.cn/plugin?id=3267)，用 HBuilderX 新建一个 uni-admin 项目。
 2. 关联到**同一个** uniCloud 服务空间（与本项目一致）。
-3. 部署后即可在后台「用户管理」中查看所有通过 `user-center` 注册的 `uni-id-users` 用户。
+3. 部署后即可在后台「用户管理」中查看所有通过 `uni-id-co` 注册的 `uni-id-users` 用户。
 4. 由于登录用户都写入 `uni-id-users` 表，uni-admin 可直接增删改查、封禁、改昵称等。
 
 > 进度表 `cxch-user-progress` 也可在 uni-admin 的 DB Schema 管理里直接查看（仅本人可读写的权限不影响管理员）。
@@ -112,11 +137,11 @@ cloudfunctions/common/uni-config-center/    (含 index.js + uni-id/ 目录)
 
 - [ ] `../miniprogram/src/manifest.json` 三处 uniCloud 配置已填。
 - [ ] `uni-id/config.json` 密钥已替换、微信 appid/secret 已填。
-- [ ] `user-center` 已上传部署；`cxch-user-progress` schema 已上传。
+- [ ] `uni-id-co` 云对象 + `user-center` 云函数已上传部署；`cxch-user-progress` schema 已上传。
 - [ ] 微信开发者工具中：我的 → 登录 → 微信一键登录，成功后「我的」显示昵称。
 - [ ] 学习一张卡片 → 等 3s → 换设备登录同账号 → 进度已同步。
 - [ ] 退出登录后本地进度保留、再登录可拉回。
-- [ ] （可选）短信登录：H5 端输入手机号收到验证码并登录成功。
+- [ ] （可选）短信登录：H5 端输入手机号 + 图形验证码 + 短信验证码登录成功。
 
 ---
 
