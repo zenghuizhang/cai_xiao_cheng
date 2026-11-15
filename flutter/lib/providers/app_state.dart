@@ -14,6 +14,8 @@ class AppState extends ChangeNotifier {
   String rankTitle = '青铜小白';
   int cardsRead = 0;
   int totalCards = 0;
+  int totalBooks = 0;
+  int totalGlossary = 0;
   int chaptersPassed = 0;
   int streak = 0;
   bool crashUsed = false;
@@ -27,6 +29,8 @@ class AppState extends ChangeNotifier {
   Future<void> init() async {
     _chapters = await _db.getChapters();
     totalCards = await _db.countCards();
+    totalBooks = await _db.countBooks();
+    totalGlossary = await _db.countGlossary();
     await refresh();
     loaded = true;
     notifyListeners();

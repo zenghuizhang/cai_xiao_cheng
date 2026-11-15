@@ -116,6 +116,10 @@ class _ChapterLearnScreenState extends State<ChapterLearnScreen> {
                         style: const TextStyle(
                             color: AppTheme.ink2, fontSize: 12)),
                     const SizedBox(height: 2),
+                    const Text('股票 / 金融市场打底，量化 / 期货 / 回测 / 风控逐步展开',
+                        style: TextStyle(
+                            color: AppTheme.ink2, fontSize: 11, height: 1.5)),
+                    const SizedBox(height: 2),
                     Text('右滑「懂了」+${card.points}积分 · 左滑「没懂」进复习',
                         style: const TextStyle(
                             color: AppTheme.primaryDark, fontSize: 11)),
@@ -194,7 +198,7 @@ class _ChapterLearnScreenState extends State<ChapterLearnScreen> {
           Text(
             passed
                 ? '多看几遍，知识会更牢固 🍊'
-                : '本章共 ${_cards.length} 张卡，本次新「懂了」$readCount 张${_earned > 0 ? '，获得 $_earned 积分' : ''}。\n接下来是 ${widget.chapter.requiredQuizCount} 道闯关题，答对 80% 就能解锁下一章！',
+                : '本章共 ${_cards.length} 张卡，本次新「懂了」$readCount 张${_earned > 0 ? '，获得 $_earned 积分' : ''}。\n接下来是 ${widget.chapter.requiredQuizCount} 道闯关题，答对 80% 就能解锁下一章。\n这一章会把金融市场认知继续推进到量化、期货、策略研究与风险控制。',
             textAlign: TextAlign.center,
             style: const TextStyle(
                 fontSize: 14, height: 1.7, color: AppTheme.ink2),

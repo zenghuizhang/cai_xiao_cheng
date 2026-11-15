@@ -21,8 +21,8 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const _dbName = 'caixiaocheng.db';
-  static const _dbVersion = 5;
-  static const _contentVersion = '4';
+  static const _dbVersion = 8;
+  static const _contentVersion = '10';
 
   Database? _db;
   Future<Database> get database async {
@@ -78,6 +78,22 @@ class DatabaseHelper {
               'ALTER TABLE user_status ADD COLUMN risk_profile TEXT');
           await db.execute(
               'ALTER TABLE user_status ADD COLUMN risk_taken_at TEXT');
+        }
+        // v5 -> v6：量化/期货二次迭代，整包重灌内容表并刷新 content_version
+        if (oldV < 6) {
+          await _reseedContentTables(db);
+        }
+        // v6 -> v7：扩展为 8 章（股票/期货/量化/风控），整包重灌内容表
+        if (oldV < 7) {
+          await _reseedContentTables(db);
+        }
+        // v7 -> v8：模拟人生支持多回合剧情，补充 story_rounds/story_endings 两列并重灌内容表
+        if (oldV < 8) {
+          await db.execute(
+              'ALTER TABLE simulations ADD COLUMN story_rounds TEXT');
+          await db.execute(
+              'ALTER TABLE simulations ADD COLUMN story_endings TEXT');
+          await _reseedContentTables(db);
         }
       },
     );
@@ -187,7 +203,9 @@ class DatabaseHelper {
         background TEXT NOT NULL,
         era_year INTEGER,
         initial_amount REAL DEFAULT 100000,
-        options TEXT NOT NULL
+        options TEXT NOT NULL,
+        story_rounds TEXT,
+        story_endings TEXT
       );
     ''');
 
@@ -335,6 +353,43 @@ class DatabaseHelper {
         await rootBundle.loadString('assets/data/knowledge_base.json');
     final data = jsonDecode(raw) as Map<String, dynamic>;
 
+    await _seedContentTables(db, data);
+
+    // 初始用户状态
+    final now = DateTime.now().toIso8601String();
+    await db.insert('user_status', {
+      'id': 1,
+      'nickname': '小白',
+      'current_level': 1,
+      'rank_title': '青铜小白',
+      'total_points': 0,
+      'current_chapter_id': 'C1',
+      'cards_read_count': 0,
+      'quizzes_passed_count': 0,
+      'daily_streak': 0,
+      'last_daily_date': null,
+      'crash_sim_used': 0,
+      'created_at': now,
+      'updated_at': now,
+    });
+
+    await db.insert('app_meta',
+        {'key': 'content_version', 'value': _contentVersion});
+    await db.insert(
+        'app_meta', {'key': 'first_launch_at', 'value': now});
+  }
+
+  Future<void> _reseedContentTables(Database db) async {
+    final raw =
+        await rootBundle.loadString('assets/data/knowledge_base.json');
+    final data = jsonDecode(raw) as Map<String, dynamic>;
+    await _seedContentTables(db, data);
+    await db.insert('app_meta', {'key': 'content_version', 'value': _contentVersion},
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> _seedContentTables(
+      Database db, Map<String, dynamic> data) async {
     // chapters
     for (final j in (data['chapters'] as List)) {
       final c = Chapter.fromJson(j as Map<String, dynamic>);
@@ -412,6 +467,34 @@ class DatabaseHelper {
                   'takeaway': o.takeaway,
                 })
             .toList()),
+        'story_rounds': jsonEncode(s.storyRounds
+            .map((r) => {
+                  'id': r.id,
+                  'title': r.title,
+                  'background': r.background,
+                  'options': r.options
+                      .map((o) => {
+                            'key': o.key,
+                            'text': o.text,
+                            'feedback': o.feedback,
+                            'score_delta': o.scoreDelta,
+                            'emoji': o.emoji,
+                          })
+                      .toList(),
+                })
+            .toList()),
+        'story_endings': jsonEncode(s.storyEndings
+            .map((e) => {
+                  'id': e.id,
+                  'min_score': e.minScore,
+                  'max_score': e.maxScore,
+                  'title': e.title,
+                  'outcome': e.outcome,
+                  'pnl_pct': e.pnlPct,
+                  'emoji': e.emoji,
+                  'takeaway': e.takeaway,
+                })
+            .toList()),
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
@@ -456,29 +539,6 @@ class DatabaseHelper {
 
     // 经典书架
     await _seedBooks(db, data);
-
-    // 初始用户状态
-    final now = DateTime.now().toIso8601String();
-    await db.insert('user_status', {
-      'id': 1,
-      'nickname': '小白',
-      'current_level': 1,
-      'rank_title': '青铜小白',
-      'total_points': 0,
-      'current_chapter_id': 'C1',
-      'cards_read_count': 0,
-      'quizzes_passed_count': 0,
-      'daily_streak': 0,
-      'last_daily_date': null,
-      'crash_sim_used': 0,
-      'created_at': now,
-      'updated_at': now,
-    });
-
-    await db.insert('app_meta',
-        {'key': 'content_version', 'value': _contentVersion});
-    await db.insert(
-        'app_meta', {'key': 'first_launch_at', 'value': now});
   }
 
   // ---------------- 查询 ----------------
@@ -492,6 +552,18 @@ class DatabaseHelper {
   Future<int> countCards() async {
     final db = await database;
     return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM cards')) ??
+        0;
+  }
+
+  Future<int> countBooks() async {
+    final db = await database;
+    return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM books')) ??
+        0;
+  }
+
+  Future<int> countGlossary() async {
+    final db = await database;
+    return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM glossary')) ??
         0;
   }
 
@@ -552,6 +624,12 @@ class DatabaseHelper {
       final opts = (jsonDecode(r['options'] as String) as List)
           .map((e) => SimOption.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
+      final storyRounds = (jsonDecode((r['story_rounds'] as String?) ?? '[]') as List)
+          .map((e) => StoryRound.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      final storyEndings = (jsonDecode((r['story_endings'] as String?) ?? '[]') as List)
+          .map((e) => StoryEnding.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
       return Simulation(
         id: r['id'] as String,
         chapterId: r['chapter_id'] as String?,
@@ -561,6 +639,8 @@ class DatabaseHelper {
         eraYear: (r['era_year'] as int?) ?? 0,
         initialAmount: (r['initial_amount'] as num?)?.toDouble() ?? 100000,
         options: opts,
+        storyRounds: storyRounds,
+        storyEndings: storyEndings,
       );
     }).toList();
   }
@@ -763,10 +843,19 @@ class DatabaseHelper {
     await db.update(
         'growth_fruits', {'unlocked': 1, 'unlocked_at': now},
         where: 'chapter_id = ? AND unlocked = 0', whereArgs: [chapterId]);
-    // 通过章节即解锁下一章，并更新段位（等级=已通关章数+1，封顶4）
+    // 通过章节即解锁下一章，并更新段位（等级=已通关章数+1，封顶8）
     final order = int.parse(chapterId.substring(1));
-    final newLevel = (order + 1).clamp(1, 4);
-    final titles = {1: '青铜小白', 2: '白银学徒', 3: '黄金规划师', 4: '铂金守心人'};
+    final newLevel = (order + 1).clamp(1, 8);
+    final titles = {
+      1: '青铜小白',
+      2: '白银学徒',
+      3: '黄金规划师',
+      4: '铂金守心人',
+      5: '翡翠研究员',
+      6: '红宝石交易员',
+      7: '钻石量化师',
+      8: '黑曜石守心人',
+    };
     await saveUserStatus({
       'current_level': newLevel,
       'rank_title': titles[newLevel],

@@ -57,13 +57,13 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('站在巨人的肩膀上',
+                              const Text('从股票、金融市场一路读到量化与期货',
                                   style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 19,
                                       fontWeight: FontWeight.w900)),
                               const SizedBox(height: 4),
-                              Text('${_books.length} 本投资经典，我们用大白话帮你嚼碎了。想深入，再去读原书。',
+                              Text('${_books.length} 本投资与交易经典，我们用大白话帮你拆到入门可学。想深入，再去读原书。',
                                   style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 12,
@@ -117,9 +117,9 @@ class _BookshelfScreenState extends State<BookshelfScreen> {
 
   Widget _levelHeader(int level) {
     final (emoji, label, desc) = switch (level) {
-      1 => ('🌱', '入门 · 先读这些', '完全零基础也能轻松读'),
-      2 => ('🌿', '进阶 · 建立体系', '懂基础后，构建投资框架'),
-      _ => ('🌳', '高阶 · 修炼心态', '理解风险、周期与人性'),
+      1 => ('🌱', '入门 · 金融市场与股票基础', '先搭市场认知、股票常识与投资框架'),
+      2 => ('🌿', '进阶 · 量化、期货与策略研究', '进入回测、因子、趋势、CTA 与系统化交易'),
+      _ => ('🌳', '高阶 · 风控、衍生品与交易心理', '理解风险暴露、执行约束与长期生存'),
     };
     return Row(
       children: [

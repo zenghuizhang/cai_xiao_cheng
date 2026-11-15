@@ -80,7 +80,10 @@ class _SimLifeListState extends State<_SimLifeList> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -95,10 +98,23 @@ class _SimLifeListState extends State<_SimLifeList> {
                               fontWeight: FontWeight.w800,
                               color: AppTheme.primaryDark)),
                     ),
-                    const SizedBox(width: 8),
                     Text('初始 ¥${s.initialAmount.toStringAsFixed(0)}',
                         style: const TextStyle(
                             fontSize: 12, color: AppTheme.ink2)),
+                    if (s.isStoryMode)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.greenSoft,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text('多回合剧情 · ${s.storyRounds.length} 回合',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF2E7D4F))),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -112,14 +128,20 @@ class _SimLifeListState extends State<_SimLifeList> {
                     style: const TextStyle(
                         fontSize: 14, height: 1.7, color: AppTheme.ink2)),
                 const SizedBox(height: 12),
-                ...s.options.map((o) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _OptionButton(
-                        sim: s,
-                        option: o,
-                        onAfter: () => context.read<AppState>().refresh(),
-                      ),
-                    )),
+                if (s.isStoryMode)
+                  _StoryLaunchButton(
+                    sim: s,
+                    onAfter: () => context.read<AppState>().refresh(),
+                  )
+                else
+                  ...s.options.map((o) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _LegacyOptionButton(
+                          sim: s,
+                          option: o,
+                          onAfter: () => context.read<AppState>().refresh(),
+                        ),
+                      )),
               ],
             ),
           ),
@@ -129,18 +151,52 @@ class _SimLifeListState extends State<_SimLifeList> {
   }
 }
 
-class _OptionButton extends StatefulWidget {
+class _StoryLaunchButton extends StatelessWidget {
+  final Simulation sim;
+  final VoidCallback onAfter;
+  const _StoryLaunchButton({required this.sim, required this.onAfter});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton(
+          onPressed: () async {
+            await Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => _StorySimPage(sim: sim),
+            ));
+            onAfter();
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: AppTheme.primary,
+            minimumSize: const Size.fromHeight(48),
+          ),
+          child: Text('开始剧情模式（${sim.storyRounds.length} 回合）',
+              style: const TextStyle(fontWeight: FontWeight.w800)),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          '不是一次选完就结束，而是跟着剧情连续做决定，最后看你走向哪种结局。',
+          style: TextStyle(fontSize: 12, color: AppTheme.ink2, height: 1.6),
+        ),
+      ],
+    );
+  }
+}
+
+class _LegacyOptionButton extends StatefulWidget {
   final Simulation sim;
   final SimOption option;
   final VoidCallback onAfter;
-  const _OptionButton(
+  const _LegacyOptionButton(
       {required this.sim, required this.option, required this.onAfter});
 
   @override
-  State<_OptionButton> createState() => _OptionButtonState();
+  State<_LegacyOptionButton> createState() => _LegacyOptionButtonState();
 }
 
-class _OptionButtonState extends State<_OptionButton> {
+class _LegacyOptionButtonState extends State<_LegacyOptionButton> {
   bool _revealed = false;
   bool _choseThis = false;
   int _earned = 0;
@@ -168,8 +224,7 @@ class _OptionButtonState extends State<_OptionButton> {
           style: OutlinedButton.styleFrom(
             alignment: Alignment.centerLeft,
             minimumSize: const Size.fromHeight(48),
-            backgroundColor:
-                _choseThis ? AppTheme.cream : null,
+            backgroundColor: _choseThis ? AppTheme.cream : null,
             side: BorderSide(
                 color: _choseThis ? AppTheme.primary : AppTheme.line,
                 width: _choseThis ? 1.5 : 1),
@@ -194,9 +249,7 @@ class _OptionButtonState extends State<_OptionButton> {
                     Text(o.emoji, style: const TextStyle(fontSize: 26)),
                     const SizedBox(width: 8),
                     Text(
-                      gain
-                          ? '假设收益 ${o.pnlPct.toStringAsFixed(1)}%'
-                          : '假设收益 ${o.pnlPct.toStringAsFixed(1)}%',
+                      '假设收益 ${o.pnlPct.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -251,6 +304,272 @@ class _OptionButtonState extends State<_OptionButton> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _StorySimPage extends StatefulWidget {
+  final Simulation sim;
+  const _StorySimPage({required this.sim});
+
+  @override
+  State<_StorySimPage> createState() => _StorySimPageState();
+}
+
+class _StorySimPageState extends State<_StorySimPage> {
+  int _roundIndex = 0;
+  int _storyScore = 0;
+  bool _finished = false;
+  StoryEnding? _ending;
+  String _pathKey = '';
+  int _earned = 0;
+  StoryOption? _selected;
+
+  Future<void> _choose(StoryOption option) async {
+    if (_selected != null || _finished) return;
+    setState(() {
+      _selected = option;
+      _storyScore += option.scoreDelta;
+      _pathKey = _pathKey.isEmpty ? option.key : '$_pathKey>${option.key}';
+    });
+
+    await Future.delayed(const Duration(milliseconds: 350));
+    final isLast = _roundIndex >= widget.sim.storyRounds.length - 1;
+    if (isLast) {
+      final ending = widget.sim.storyEndings.firstWhere(
+        (e) => _storyScore >= e.minScore && _storyScore <= e.maxScore,
+        orElse: () => widget.sim.storyEndings.last,
+      );
+      _earned = await context
+          .read<AppState>()
+          .recordSim(widget.sim.id, _pathKey, ending.pnlPct);
+      if (!mounted) return;
+      setState(() {
+        _ending = ending;
+        _finished = true;
+      });
+    } else {
+      if (!mounted) return;
+      setState(() {
+        _roundIndex += 1;
+        _selected = null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final round = widget.sim.storyRounds[_roundIndex];
+    final progress = (_roundIndex + (_finished ? 1 : 0)) /
+        widget.sim.storyRounds.length;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.sim.title)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          LinearProgressIndicator(
+            value: progress.clamp(0, 1),
+            minHeight: 8,
+            backgroundColor: AppTheme.line,
+            valueColor: const AlwaysStoppedAnimation(AppTheme.primary),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _finished
+                ? '剧情完成 · 你的路线：$_pathKey'
+                : '第 ${_roundIndex + 1}/${widget.sim.storyRounds.length} 回合',
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primaryDark),
+          ),
+          const SizedBox(height: 14),
+          if (!_finished) ...[
+            Text(round.title,
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.ink)),
+            const SizedBox(height: 8),
+            Text(round.background,
+                style: const TextStyle(
+                    fontSize: 15, height: 1.8, color: AppTheme.ink2)),
+            const SizedBox(height: 16),
+            ...round.options.map((o) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _StoryOptionTile(
+                    option: o,
+                    selected: _selected?.key == o.key,
+                    disabled: _selected != null,
+                    onTap: () => _choose(o),
+                  ),
+                )),
+            if (_selected != null) ...[
+              const SizedBox(height: 10),
+              _StoryFeedbackCard(option: _selected!),
+            ],
+          ] else if (_ending != null) ...[
+            _StoryEndingCard(ending: _ending!, earned: _earned),
+          ],
+          const SizedBox(height: 12),
+          const Text(
+            '※ 以上为多回合假设性教学剧情，不构成任何投资建议。',
+            style: TextStyle(fontSize: 11, color: AppTheme.ink2),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryOptionTile extends StatelessWidget {
+  final StoryOption option;
+  final bool selected;
+  final bool disabled;
+  final VoidCallback onTap;
+  const _StoryOptionTile({
+    required this.option,
+    required this.selected,
+    required this.disabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: disabled ? null : onTap,
+      style: OutlinedButton.styleFrom(
+        alignment: Alignment.centerLeft,
+        minimumSize: const Size.fromHeight(56),
+        backgroundColor: selected ? AppTheme.cream : null,
+        side: BorderSide(
+            color: selected ? AppTheme.primary : AppTheme.line,
+            width: selected ? 1.5 : 1),
+      ),
+      child: Text('${option.key}. ${option.text}',
+          style: const TextStyle(
+              color: AppTheme.ink, fontWeight: FontWeight.w600, height: 1.5)),
+    );
+  }
+}
+
+class _StoryFeedbackCard extends StatelessWidget {
+  final StoryOption option;
+  const _StoryFeedbackCard({required this.option});
+
+  @override
+  Widget build(BuildContext context) {
+    final positive = option.scoreDelta >= 1;
+    final neutral = option.scoreDelta == 0;
+    final bg = positive
+        ? AppTheme.greenSoft
+        : (neutral ? AppTheme.warnSoft : const Color(0xFFFDECEA));
+    final color = positive
+        ? const Color(0xFF2E7D4F)
+        : (neutral ? AppTheme.primaryDark : const Color(0xFFB4452F));
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(option.emoji, style: const TextStyle(fontSize: 24)),
+              const SizedBox(width: 8),
+              Text(
+                positive ? '这一步更稳' : (neutral ? '这一步中性' : '这一步风险更高'),
+                style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w900, color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(option.feedback,
+              style: const TextStyle(fontSize: 14, height: 1.7, color: AppTheme.ink)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryEndingCard extends StatelessWidget {
+  final StoryEnding ending;
+  final int earned;
+  const _StoryEndingCard({required this.ending, required this.earned});
+
+  @override
+  Widget build(BuildContext context) {
+    final gain = ending.pnlPct >= 0;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: gain ? AppTheme.greenSoft : const Color(0xFFFDECEA),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(ending.emoji, style: const TextStyle(fontSize: 30)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(ending.title,
+                    style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.ink)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('假设结果 ${ending.pnlPct.toStringAsFixed(1)}%',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color:
+                    gain ? const Color(0xFF2E7D4F) : const Color(0xFFB4452F),
+              )),
+          const SizedBox(height: 8),
+          Text(ending.outcome,
+              style: const TextStyle(fontSize: 14, height: 1.8, color: AppTheme.ink)),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('🍊 '),
+                Expanded(
+                  child: Text(ending.takeaway,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.6,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primaryDark)),
+                ),
+              ],
+            ),
+          ),
+          if (earned > 0) ...[
+            const SizedBox(height: 8),
+            Text('+${earned} 积分（首次完成剧情奖励）',
+                style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.primaryDark,
+                    fontWeight: FontWeight.w700)),
+          ],
+        ],
+      ),
     );
   }
 }

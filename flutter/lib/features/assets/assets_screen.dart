@@ -92,9 +92,9 @@ class AssetsScreen extends StatelessWidget {
             // 成就统计
             Row(
               children: [
-                _stat('已读卡片', '${state.cardsRead}/80'),
+                _stat('已读卡片', '${state.cardsRead}/${state.totalCards}'),
                 const SizedBox(width: 10),
-                _stat('通关章节', '${state.chaptersPassed}/4'),
+                _stat('通关章节', '${state.chaptersPassed}/${state.chapters.length}'),
                 const SizedBox(width: 10),
                 _stat('连续打卡', '${state.streak}天'),
               ],
@@ -125,7 +125,7 @@ class AssetsScreen extends StatelessWidget {
               context,
               icon: Icons.menu_book,
               title: '经典书架',
-              subtitle: '16 本投资经典，大白话导读',
+              subtitle: '${state.totalBooks} 本投资经典，大白话导读',
               onTap: () => Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const BookshelfScreen())),
             ),
@@ -133,7 +133,7 @@ class AssetsScreen extends StatelessWidget {
               context,
               icon: Icons.menu_book_outlined,
               title: '全部词条（一句话读懂）',
-              subtitle: '231 个金融词，用大白话讲给你听',
+              subtitle: '${state.totalGlossary} 个金融词，用大白话讲给你听',
               onTap: () => GlossarySheet.open(context),
             ),
             _toolTile(

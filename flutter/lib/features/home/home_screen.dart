@@ -41,6 +41,9 @@ class HomeScreen extends StatelessWidget {
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.ink)),
+            const SizedBox(height: 4),
+            const Text('按“金融市场 → 股票 → 量化 → 期货 → 风控与交易纪律”逐步推进',
+                style: TextStyle(color: AppTheme.ink2, fontSize: 12, height: 1.5)),
             const SizedBox(height: 10),
             ...state.chapters.map((c) => _chapterTile(context, state, c)),
             const SizedBox(height: 16),
@@ -72,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.ink)),
-              const Text('今天也要慢慢来，比较快 🍊',
+              const Text('今天继续补齐金融市场、股票、量化与策略研究 🍊',
                   style: TextStyle(color: AppTheme.ink2, fontSize: 13)),
             ],
           ),
@@ -130,8 +133,13 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '已读 ${state.cardsRead} / ${state.totalCards} 张知识卡 · 通关 ${state.chaptersPassed} / 4 章',
+            '已读 ${state.cardsRead} / ${state.totalCards} 张知识卡 · 通关 ${state.chaptersPassed} / ${state.chapters.length} 章',
             style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '从股票与金融市场基础，逐步进入量化、期货、回测、风控与交易心理。',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.6),
           ),
         ],
       ),
@@ -166,7 +174,7 @@ class HomeScreen extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
                             color: AppTheme.ink)),
-                    Text('3 道判断题，连签有奖励 🔥',
+                    Text('今天来刷一组股票、量化或风险判断题 🔥',
                         style: TextStyle(color: AppTheme.ink2, fontSize: 13)),
                   ],
                 ),
@@ -240,7 +248,7 @@ class HomeScreen extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       color: AppTheme.ink)),
               const Spacer(),
-              Text('${state.unlockedFruits.length}/4 个果实',
+              Text('${state.unlockedFruits.length}/${state.chapters.length} 个果实',
                   style: const TextStyle(
                       color: AppTheme.primaryDark,
                       fontWeight: FontWeight.w700,
@@ -266,16 +274,24 @@ class HomeScreen extends StatelessWidget {
 
   List<Widget> _fruitPositions(BuildContext context, AppState state) {
     const positions = [
-      Offset(30, 28),
-      Offset(100, 8),
-      Offset(180, 28),
-      Offset(250, 8),
+      Offset(15, 38),
+      Offset(70, 8),
+      Offset(130, 38),
+      Offset(185, 8),
+      Offset(245, 38),
+      Offset(300, 8),
+      Offset(360, 38),
+      Offset(415, 8),
     ];
     final fruitMeta = {
       'C1': ('🍊', '看懂通胀'),
       'C2': ('🥝', '分清工具'),
       'C3': ('🍋', '掌握定投'),
       'C4': ('🍎', '识破骗局'),
+      'C5': ('🍇', '看懂股票与估值'),
+      'C6': ('🍑', '理解期货与杠杆'),
+      'C7': ('🍓', '掌握量化与回测'),
+      'C8': ('🫐', '守住风险与纪律'),
     };
     final widgets = <Widget>[];
     for (int i = 0; i < state.chapters.length; i++) {
@@ -383,7 +399,7 @@ class HomeScreen extends StatelessWidget {
                         passed
                             ? '已通关 · 可随时复习'
                             : (unlocked
-                                ? '约 ${chapter.estimatedMinutes} 分钟 · ${chapter.requiredQuizCount} 道闯关题'
+                                ? '约 ${chapter.estimatedMinutes} 分钟 · ${chapter.requiredQuizCount} 道闯关题 · 含策略与风险认知'
                                 : '通关上一章后解锁'),
                         style: TextStyle(
                             fontSize: 11,
@@ -423,7 +439,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// 成长树绘制：树干 + 四根树枝（对应 4 章），已通关的枝上结果实高亮。
+/// 成长树绘制：树干 + 八根树枝（对应 8 章），已通关的枝上结果实高亮。
 class _TreePainter extends CustomPainter {
   final AppState state;
   _TreePainter(this.state);
@@ -453,21 +469,26 @@ class _TreePainter extends CustomPainter {
       trunk,
     );
     // 树冠（随通过章节数长大）
-    final passed = state.chaptersPassed.clamp(0, 4);
-    final canopyR = 26.0 + passed * 6.0;
+    final passed = state.chaptersPassed.clamp(0, 8);
+    final canopyR = 22.0 + passed * 4.0;
     canvas.drawCircle(
         Offset(size.width / 2, size.height - 86), canopyR, leafPaint);
 
-    // 四根树枝
+    // 八根树枝 — 左右交替从树冠向外延伸
     final branchPaint = Paint()
       ..color = const Color(0xFFB98A5B)
-      ..strokeWidth = 5
+      ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
+    // 与 _fruitPositions 中的坐标对齐
     final branchEnds = [
-      Offset(55, 48),
-      Offset(125, 28),
-      Offset(205, 48),
-      Offset(275, 28),
+      Offset(15, 38),
+      Offset(70, 8),
+      Offset(130, 38),
+      Offset(185, 8),
+      Offset(245, 38),
+      Offset(300, 8),
+      Offset(360, 38),
+      Offset(415, 8),
     ];
     final base = Offset(size.width / 2, size.height - 70);
     for (int i = 0; i < branchEnds.length; i++) {

@@ -16,6 +16,10 @@ export const RANK_TITLES = {
   2: '白银学徒',
   3: '黄金规划师',
   4: '铂金守心人',
+  5: '翡翠研究员',
+  6: '红宝石交易员',
+  7: '钻石量化师',
+  8: '黑曜石守心人',
 }
 
 /** yyyy-mm-dd。 */
@@ -145,9 +149,9 @@ export const useAppStore = defineStore('app', {
         if (!p.unlocked_fruits.includes(chapterId)) {
           p.unlocked_fruits.push(chapterId)
         }
-        // 升段位：通关 order → level = order+1，封顶 4
+        // 升段位：通关 order → level = order+1，封顶 8
         const order = parseInt(chapterId.substring(1), 10)
-        const newLevel = Math.min(Math.max(order + 1, 1), 4)
+        const newLevel = Math.min(Math.max(order + 1, 1), 8)
         p.current_level = newLevel
         p.rank_title = RANK_TITLES[newLevel]
       }

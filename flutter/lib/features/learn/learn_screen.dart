@@ -21,6 +21,8 @@ class LearnScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             _bookshelfBanner(context),
+            const SizedBox(height: 12),
+            _focusBanner(),
             const SizedBox(height: 18),
             if (current != null) _continueCard(context, state, current),
             const SizedBox(height: 18),
@@ -86,6 +88,7 @@ class LearnScreen extends StatelessWidget {
   }
 
   Widget _bookshelfBanner(BuildContext context) {
+    final state = context.watch<AppState>();
     return Material(
       color: const Color(0xFFFFEBDC),
       borderRadius: BorderRadius.circular(18),
@@ -112,19 +115,19 @@ class LearnScreen extends StatelessWidget {
                 child: const Text('📚', style: TextStyle(fontSize: 24)),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('经典书架',
+                    const Text('经典书架',
                         style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 16,
                             color: AppTheme.ink)),
-                    SizedBox(height: 2),
-                    Text('16 本投资经典 · 大白话导读',
-                        style:
-                            TextStyle(color: AppTheme.primaryDark, fontSize: 12)),
+                    const SizedBox(height: 2),
+                    Text('${state.totalBooks} 本投资经典 · 股票 / 金融市场 / 量化 / 期货',
+                        style: const TextStyle(
+                            color: AppTheme.primaryDark, fontSize: 12)),
                   ],
                 ),
               ),
@@ -136,8 +139,42 @@ class LearnScreen extends StatelessWidget {
     );
   }
 
-  Widget _continueCard(
-      BuildContext context, AppState state, current) {
+  Widget _focusBanner() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.line),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('🧭', style: TextStyle(fontSize: 22)),
+          SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('本轮强化重点',
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.ink)),
+                SizedBox(height: 4),
+                Text(
+                  '股票与金融市场打基础，量化与期货做进阶，策略研究、回测、风控与交易心理做完整闭环。',
+                  style: TextStyle(
+                      fontSize: 12, height: 1.6, color: AppTheme.ink2),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
     final passed = state.passedChapters.contains(current.id);
     final color = Color(current.colorValue);
     return Container(
@@ -166,7 +203,10 @@ class LearnScreen extends StatelessWidget {
                       fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 4),
-                Text(current.subtitle,
+                Text(
+                    passed
+                        ? '你已经完成从市场基础到量化与风控的整条入门路径'
+                        : '${current.subtitle} · 当前章节已强化量化、期货与策略研究内容',
                     style: const TextStyle(
                         color: Colors.white70, fontSize: 12)),
                 const SizedBox(height: 10),

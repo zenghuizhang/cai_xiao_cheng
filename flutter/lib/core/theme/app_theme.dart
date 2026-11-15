@@ -116,11 +116,19 @@ class AppTheme {
     2: Color(0xFF9AA7B0), // 白银
     3: Color(0xFFE5A83B), // 黄金
     4: Color(0xFF7B6BD6), // 铂金
+    5: Color(0xFF2DAB6B), // 翡翠
+    6: Color(0xFFE04040), // 红宝石
+    7: Color(0xFF4A90D9), // 钻石
+    8: Color(0xFF4A4A52), // 黑曜石
   };
   static const Map<int, String> levelTitle = {
     1: "青铜小白",
     2: "白银学徒",
     3: "黄金规划师",
     4: "铂金守心人",
+    5: "翡翠研究员",
+    6: "红宝石交易员",
+    7: "钻石量化师",
+    8: "黑曜石守心人",
   };
 }

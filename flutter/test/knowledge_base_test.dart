@@ -27,12 +27,12 @@ void main() {
     }
   });
 
-  test('4 个章节，解锁链 C1→C2→C3→C4', () {
+  test('8 个章节，解锁链 C1→C2→…→C8', () {
     final chapters = data['chapters'] as List;
-    expect(chapters.length, 4);
+    expect(chapters.length, 8);
     expect(chapters[0]['id'], 'C1');
     expect(chapters[0]['unlock_type'], 'none');
-    for (int i = 1; i < 4; i++) {
+    for (int i = 1; i < 8; i++) {
       expect(chapters[i]['unlock_type'], 'prev_chapter');
       expect(chapters[i]['unlock_ref'], chapters[i - 1]['id']);
     }
@@ -41,7 +41,7 @@ void main() {
   test('卡片规模达标、分布合理、每张带生活类比', () {
     final cards = data['cards'] as List;
     expect(cards.length, greaterThanOrEqualTo(80));
-    final counts = {1: 0, 2: 0, 3: 0, 4: 0};
+    final counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0};
     final ids = <String>{};
     for (final c in cards) {
       counts[c['chapter'] as int] = counts[c['chapter']]! + 1;
@@ -77,7 +77,7 @@ void main() {
     }
   });
 
-  test('模拟场景 ≥6 个，每个 3 个选项且字段齐全', () {
+  test('模拟场景 ≥6 个；普通场景保持 3 个选项，多回合剧情结构合法', () {
     final sims = data['simulations'] as List;
     expect(sims.length, greaterThanOrEqualTo(6));
     for (final s in sims) {
@@ -89,6 +89,34 @@ void main() {
         expect(o.containsKey('pnl_pct'), true);
         expect(o.containsKey('emoji'), true);
         expect(o.containsKey('takeaway'), true);
+      }
+
+      final rounds = s['story_rounds'] as List? ?? const [];
+      final endings = s['story_endings'] as List? ?? const [];
+      if (rounds.isNotEmpty || endings.isNotEmpty) {
+        expect(rounds.length, greaterThanOrEqualTo(2), reason: '${s['id']} 多回合剧情至少 2 回合');
+        expect(endings.length, greaterThanOrEqualTo(2), reason: '${s['id']} 多回合剧情至少 2 个结局');
+        for (final r in rounds) {
+          expect((r['title'] as String).isNotEmpty, true);
+          expect((r['background'] as String).isNotEmpty, true);
+          final ropts = r['options'] as List;
+          expect(ropts.length, 3, reason: '${s['id']} 每回合必须 3 个选项');
+          for (final o in ropts) {
+            expect(o.containsKey('key'), true);
+            expect(o.containsKey('text'), true);
+            expect(o.containsKey('feedback'), true);
+            expect(o.containsKey('score_delta'), true);
+            expect(o.containsKey('emoji'), true);
+          }
+        }
+        for (final e in endings) {
+          expect(e.containsKey('min_score'), true);
+          expect(e.containsKey('max_score'), true);
+          expect((e['title'] as String).isNotEmpty, true);
+          expect((e['outcome'] as String).isNotEmpty, true);
+          expect(e.containsKey('pnl_pct'), true);
+          expect(e.containsKey('takeaway'), true);
+        }
       }
     }
   });
@@ -112,9 +140,9 @@ void main() {
     }
   });
 
-  test('4 个果实对应 4 章', () {
+  test('8 个果实对应 8 章', () {
     final f = data['fruits'] as List;
-    expect(f.length, 4);
+    expect(f.length, 8);
     final chapters = (data['chapters'] as List).map((c) => c['id']).toSet();
     for (final fruit in f) {
       expect(chapters.contains(fruit['chapter_id']), true);
