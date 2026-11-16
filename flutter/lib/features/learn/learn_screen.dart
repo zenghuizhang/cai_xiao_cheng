@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../data/models/chapter.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/orange_mascot.dart';
 import '../books/bookshelf_screen.dart';
@@ -175,6 +176,8 @@ class LearnScreen extends StatelessWidget {
     );
   }
 
+  Widget _continueCard(
+      BuildContext context, AppState state, Chapter current) {
     final passed = state.passedChapters.contains(current.id);
     final color = Color(current.colorValue);
     return Container(
