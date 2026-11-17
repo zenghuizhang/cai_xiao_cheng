@@ -21,10 +21,10 @@ cai_xiao_cheng/
 
 | 目录 | 形态 | 技术栈 | 状态 |
 |------|------|--------|------|
-| `flutter/` | Android / iOS App | Flutter + Dart + Provider + SQLite | ✅ v2.0 可构建（`flutter build apk`） |
-| `miniprogram/` | 微信小程序 + H5 | uni-app Vue3 + Vite + Pinia | ✅ v1.0 双端构建通过 |
-| `harmonyos/` | 鸿蒙 HarmonyOS NEXT | ArkTS（规划） | 🚧 规划中，见其 README |
-| `backend/` | uniCloud 服务端 | uniCloud（阿里云）+ uni-id | ✅ 云函数就绪，待部署 |
+| `flutter/` | Android / iOS App | Flutter 3.50 + Dart + Provider + SQLite | ✅ 可构建(2026-11 实测 debug APK 出包,21 项单测通过) |
+| `miniprogram/` | 微信小程序 + H5 | uni-app Vue3 + Vite + Pinia | ✅ v1.0 双端构建通过(2026-11 复验) |
+| `harmonyos/` | 鸿蒙 HarmonyOS NEXT | ArkTS(规划) | 🚧 规划中,见其 README |
+| `backend/` | uniCloud 服务端 | uniCloud(阿里云)+ uni-id | ✅ 云函数就绪,待部署 |
 
 > 各端共享 `docs/` 下的产品文档与内容框架；后端 `backend/` 为所有客户端共用。
 
@@ -32,11 +32,24 @@ cai_xiao_cheng/
 
 ## 🍊 各端快速入口
 
-### Flutter 版（`flutter/`）
+### 🧰 环境要求(2026-11 实测)
+
+| 工具 | 版本 | 用途 |
+|------|------|------|
+| Flutter / Dart | 3.50.0 / 3.14 | App 构建、分析、单测 |
+| JDK | 17 | Android 构建(Gradle 9 最低要求) |
+| Android SDK | platform 36 + build-tools 36 | 出 APK(无需 Android Studio) |
+| Node / npm | 22 / 10 | 小程序构建 |
+
+> Flutter 3.50 强制要求较新的 Android 构建栈,本仓库已迁移至 **Gradle 9.5.0 / AGP 9.3.1 / Kotlin 2.4.20**,旧工具链拉取后若构建失败请先对照升级。
+
+### Flutter 版(`flutter/`)
 ```bash
 cd flutter
 flutter pub get
-flutter build apk --release   # 产物 build/app/outputs/flutter-apk/app-release.apk
+flutter analyze            # 静态分析,期望 0 error
+flutter test               # 21 项单元测试(金融公式 + 知识库结构)
+flutter build apk --debug  # 实测通过;产物 build/app/outputs/flutter-apk/app-debug.apk
 ```
 详见 [`flutter/README.md`](./flutter/README.md)。
 
@@ -81,4 +94,9 @@ uniCloud 云函数 + 数据库，承载用户系统（微信/手机号登录 + �
 
 ## 📝 版本
 
-- **v1.0**（2026-08-15）：monorepo 归类，flutter / miniprogram / backend 三端就绪，harmonyos 规划中。
+- **v1.1**(2026-11):
+  - 内容扩充落地双端:8 章体系、48 本经典书架、368 词条、8 段位(青铜→黑曜石)
+  - 适配 Flutter 3.50:修复 `learn_screen` 结构损坏导致的编译失败,`CardTheme` → `CardThemeData`
+  - Android 构建栈迁移至 Gradle 9.5.0 / AGP 9.3.1 / Kotlin 2.4.20 / JVM 17,实测可出 APK
+  - 桌面图标替换为橙小橙品牌图标(五档 mipmap),恢复 Manifest 的 icon 声明
+- **v1.0**(2026-08-15):monorepo 归类,flutter / miniprogram / backend 三端就绪,harmonyos 规划中。

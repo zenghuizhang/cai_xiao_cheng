@@ -43,9 +43,11 @@
 - **市场暴跌演练**：一个红色按钮，模拟本金 −20%，配上「这时候该怎么做」的心理建设。
 - **经典书架**：**48 本**投资与交易经典的大白话导读，覆盖金融市场、股票投资、期货衍生品、量化策略、因子研究、风险管理与交易心理；按入门/进阶/高阶分组，含核心理念、适合谁、阅读路径。均为原创摘要，标注作者并提示「支持正版」。
 - **悬浮查词**：任何页面点「查词」，**252 个**金融与量化词条一句话读懂，全部带生活类比。
-- **认知成长树**：每通关一章，树上结一个果实，段位从青铜升到铂金。
+- **认知成长树**：每通关一章，树上结一个果实，段位沿青铜→白银→黄金→铂金→翡翠→红宝石→钻石→黑曜石一路升级（共 8 段）。
 
 视觉：暖橙 `#FF8C42` + 奶白 `#FFF8F0`，**刻意避免股票软件的大红大绿作为主基调**。
+
+桌面图标为自绘吉祥物**橙小橙**(happy 表情)品牌图标:由 `lib/widgets/orange_mascot.dart` 的 `CustomPainter` 经 Flutter 引擎渲染 1024px 源图,再缩放为五档 `android/app/src/main/res/mipmap-*/ic_launcher.png`(48/72/96/144/192),更换图标时复用同一渲染流程即可。
 
 ---
 
@@ -74,20 +76,30 @@ caixiaocheng/
 │       ├── daily/                    # 每日早餐挑战
 │       ├── assets/                   # 我的：虚拟本金、暴跌演练、重置
 │       └── about/                    # 关于与免责声明
-└── test/finance_math_test.dart       # 金融公式单元测试
+└── test/
+    ├── finance_math_test.dart        # 金融公式单元测试(7 项)
+    └── knowledge_base_test.dart       # 知识库结构与交叉引用校验(14 项,共 21 项测试)
 ```
 
 ---
 
 ## 本地运行（调试）
 
+环境要求:**Flutter 3.50(Dart 3.14)+ JDK 17 + Android SDK(platform 36 / build-tools 36)**。
+Flutter 3.50 强制的 Android 构建栈为本仓库已对齐的 **Gradle 9.5.0 / AGP 9.3.1 / Kotlin 2.4.20**(配置见 `android/settings.gradle` 与 `android/gradle/wrapper/`)。
+
 ```bash
-flutter doctor          # 检查 Android toolchain
+flutter doctor          # 检查 Android toolchain,期望 Flutter 与 Android 两项均为 ✓
 flutter pub get
+flutter analyze         # 静态分析,期望 0 error(剩余 info 为 SDK 弃用提示,不阻塞)
+flutter test            # 21 项单元测试
 flutter run             # 连接真机/模拟器
 ```
 
 ## 打包 APK（正式交付）
+
+> 调试包 `flutter build apk --debug` 已于 2026-11 实测出包通过(含 arm64-v8a / armeabi-v7a / x86_64 三 ABI)。
+> 下列 release 命令沿用 Flutter debug 密钥签名,可直接安装;上架应用商店需另行配置正式签名。
 
 按要求使用分架构打包，产物更小：
 
